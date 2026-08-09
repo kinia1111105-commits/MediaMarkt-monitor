@@ -143,20 +143,17 @@ def scan_page(url, state):
 
 
 def main():
-    while True:
-        state = load_state()
+    state = load_state()
 
-        for url in URLS:
+    for url in URLS:
             try:
                 scan_page(url, state)
             except Exception as e:
                 print(f"Błąd podczas skanowania {url}: {e}")
 
-        save_state(state)
+save_state(state)
 
-        print("⏳ Kolejne sprawdzenie za 30 sekund...")
-        import time
-        time.sleep(30)
+    
 
 
 if __name__ == "__main__":
