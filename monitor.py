@@ -58,6 +58,7 @@ def is_unavailable(text):
         "produkt niedostępny",
         "wyprzedane",
         "brak w magazynie",
+        "brak możliwości dostawy",
     ]
 
     return any(phrase in text for phrase in phrases)
@@ -95,6 +96,8 @@ def scan_page(url, state):
             continue
 
         product_url = link["href"]
+        if not product_url.startswith("/pl/product/"):
+            continue
 
         if product_url.startswith("/"):
             product_url = "https://mediamarkt.pl" + product_url
