@@ -11,6 +11,7 @@ STATE_FILE = "seen_products.json"
 
 URLS = [
     "https://mediamarkt.pl/",
+    "https://mediamarkt.pl/pl/campaign/wyprzedaz",
 ]
 
 MIN_DISCOUNT = 70
