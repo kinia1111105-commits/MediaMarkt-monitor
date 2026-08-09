@@ -1,0 +1,81 @@
+name: MediaMarkt monitor
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check MediaMarkt products
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'PY'
+          import os
+          import requests
+          from bs4 import BeautifulSoup
+
+          products = [
+              {
+                  "name": "ZELMER ZAF9000 Dual",
+                  "url": "https://mediamarkt.pl/pl/product/_outlet-frytownica-niskotluszczowa-zelmer-zaf9000-dual-2700-w-95-l-czarny-1489432.html"
+              },
+              {
+                  "name": "TUCANO MA-STYBK-BK",
+                  "url": "https://mediamarkt.pl/pl/product/_rysik-tucano-ma-stybk-bk-czarny-zloto-147176716.html"
+              },
+          ]
+
+          token = os.environ["TELEGRAM_BOT_TOKEN"]
+          chat_id = os.environ["TELEGRAM_CHAT_ID"]
+
+          headers = {
+              "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/605.1.15"
+          }
+
+          unavailable_words = [
+              "brak możliwości dostawy",
+              "brak w magazynie",
+              "produkt niedostępny",
+              "chwilowo niedostępny"
+          ]
+
+          for product in products:
+              try:
+                  r = requests.get(
+                      product["url"],
+                      headers=headers,
+                      timeout=20
+                  )
+
+                  text = BeautifulSoup(r.text, "html.parser").get_text(" ", strip=True).lower()
+
+                  unavailable = any(word in text for word in unavailable_words)
+
+                  if not unavailable:
+                      message = (
+                          "🚨 MEDIA MARKT — MOŻLIWY POWRÓT!\n\n"
+                          f"📦 {product['name']}\n"
+                          f"🔗 {product['url']}\n\n"
+                          "Sprawdź NATYCHMIAST — produkt może być dostępny tylko przez chwilę."
+                      )
+
+                      requests.post(
+                          f"https://api.telegram.org/bot{token}/sendMessage",
+                          data={
+                              "chat_id": chat_id,
+                              "text": message
+                          },
+                          timeout=15
+                      )
+
+                  print(product["name"], "OK — niedostępny" if unavailable else "DOSTĘPNY / SPRAWDŹ!")
+
+              except Exception as e:
+                  print("Błąd:", product["name"], e)
+          PY
