@@ -151,7 +151,7 @@ def main():
             except Exception as e:
                 print(f"Błąd podczas skanowania {url}: {e}")
 
-save_state(state)
+    save_state(state)
 
     
 
